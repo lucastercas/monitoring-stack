@@ -1,0 +1,25 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: elk
+  name: elasticsearch-file-config
+data:
+  elasticsearch.yml: |
+    cluster:
+      name: ${cluster.name}
+    discovery:
+      type: ${discovery.type}
+    node:
+      name: ${node.hostname}
+      master: true
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: elk
+  name: elasticsearch-config
+data:
+  ES_JAVA_OPTS: "-Xms1g -Xmx1g"
+  discovery.type: single-node
+  cluster.name: homologation-k8s-cluster

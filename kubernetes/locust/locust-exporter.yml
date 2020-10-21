@@ -1,0 +1,44 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: locust-exporter
+  name: locust-exporter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: locust-exporter
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: locust-exporter
+    spec:
+      containers:
+        - image: containersol/locust_exporter
+          name: locust-exporter
+          ports:
+            - name: default
+              containerPort: 9646
+          env:
+            - name: LOCUST_EXPORTER_URI
+              value: http://locust:8089
+          resources: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: locust-exporter
+  labels:
+    app: locust-exporter
+spec:
+  type: ClusterIp
+  selector:
+    app: locust-exporter
+  ports:
+    - port: 9646
+      targetPort: default

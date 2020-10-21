@@ -1,0 +1,35 @@
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  namespace: monitoring
+  name: grafana-pgsql-pv
+  labels:
+    app: grafana-pgsql
+spec:
+  capacity:
+    storage: 7Gi
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  nfs:
+    server: ${nfs-ip}
+    path: "/media/nfs/grafana/postgresql"
+    readOnly: false
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  namespace: monitoring
+  name: grafana-pgsql-pvc
+  labels:
+    app: grafana-pgsql
+spec:
+  selector:
+    matchLabels:
+      app: grafana-pgsql
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 7Gi

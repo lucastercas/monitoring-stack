@@ -1,0 +1,24 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: elk
+  name: kibana-config
+data:
+  kibana.yml: |
+    console:
+      enabled: true
+    server:
+      name: homologation-kibana
+      host: 0.0.0.0
+      port: 5601
+    elasticsearch:
+      hosts: ["http://elasticsearch:9200"]
+      logQueries: true
+    logging:
+      quiet: false
+      silent: false
+      verbose: true
+    telemetry:
+      optIn: false
+      enabled: true

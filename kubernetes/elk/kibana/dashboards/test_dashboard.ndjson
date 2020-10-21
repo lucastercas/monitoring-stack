@@ -1,0 +1,3 @@
+{"type":"visualization","id":"my-vis","attributes":{"title":"Look at my visualization"},"references":[{"name":"ref_0","type":"index-pattern","id":"my-pattern-*"}]}
+{"type":"search","id":"my-search","attributes":{"title":"Look at my search"},"references":[{"name":"ref_0","type":"index-pattern","id":"another-pattern-*"}]}
+{"type":"dashboard","id":"my-dashboard","attributes":{"title":"Look at my dashboard"},"references":[{"name":"ref_0","type":"visualization","id":"my-vis"},{"name":"ref_1","type":"search","id":"my-search"}]}

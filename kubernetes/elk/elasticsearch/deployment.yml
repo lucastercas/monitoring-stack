@@ -1,0 +1,55 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: elk
+  name: elasticsearch
+  labels:
+    app: elasticsearch
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: elasticsearch
+  template:
+    metadata:
+      labels:
+        app: elasticsearch
+    spec:
+      containers:
+        - name: elasticsearch
+          image: docker.elastic.co/elasticsearch/elasticsearch:7.9.0
+          imagePullPolicy: IfNotPresent
+          resources:
+            limits:
+              memory: "2000Mi"
+              cpu: "500m"
+            requests:
+              memory: "500Mi"
+              cpu: "500m"
+          ports:
+            - name: default
+              containerPort: 9200
+            - name: nodes
+              containerPort: 9300
+          envFrom:
+            configMapRef:
+              name: elasticsearch-config
+          env:
+            - name: node.hostname
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          volumeMounts:
+            - name: data-volume
+              mountPath: /usr/share/elasticsearch/data
+            - name: config-volume
+              mountPath: /usr/share/elasticsearch/config/elasticsearch.yml
+              readOnly: true
+              subPath: elasticsearch.yml
+      volumes:
+        - name: data-volume
+          emptyDir: {}
+        - name: config-volume
+          configMap:
+            name: elasticsearch-file-config

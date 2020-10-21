@@ -1,0 +1,65 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: elk
+  name: filebeat-config
+data:
+  filebeat.yml: |
+    filebeat:
+      config:
+        modules:
+          path: /usr/share/filebeat/modules.d/*.yml
+      modules:
+        - module: logstash
+        - module: elasticsearch
+      autodiscover:
+      providers:
+        - type: kubernetes
+          node: ${NODE_NAME}
+          hints.enabled: true
+          hints.default_config:
+            type: container
+            paths:
+              - /var/log/containers/*${data.kubernetes.container.id}.log
+
+      # inputs:
+      #   - type: container
+      #     paths:
+      #       - /var/log/containers/*.log
+      #     processors:
+      #       - add_kubernetes_metadata:
+      #           host: ${NODE_NAME}
+      #           indexers:
+      #             - container:
+      #             - pod_name:
+      #           matchers:
+      #             - logs_path:
+      #                 logs_path: "/var/log/containers/"
+
+    setup:
+      template:
+        name: "filebeat"
+        pattern: "filebeat-*"
+        overwrite: false
+        enabled: true
+        settings:
+          index:
+            number_of_shard: 1
+            number_of_replicas: 1
+      kibana:
+        host: "http://kibana:5601"
+
+    processors:
+      - add_host_metadata:
+      - add_docker_metadata:
+
+    output:
+      elasticsearch:
+        enabled: true
+        hosts: ["${ELASTICSEARCH_HOST:elasticsearch}:${ELASTICSEARCH_PORT:9200}"]
+        index: "filebeat-7.9.0"
+      logstash:
+        enabled: false
+        hosts: ["logstash:5044"]
+        # index: "filebeat-%{[{agent.version}]}-logstash-%{+yyyy.MM.dd}"

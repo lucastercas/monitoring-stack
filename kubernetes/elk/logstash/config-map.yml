@@ -1,0 +1,88 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: elk
+  name: logstash-config
+data:
+  pipelines.yml: |
+    - pipeline.id: default-pipeline
+      path.config: /usr/share/logstash/pipeline/logstash.conf
+      pipeline.workers: 1
+  logstash.yml: |
+    node:
+      name: ${HOSTNAME}
+    path:
+      data: /usr/share/logstash/data
+    http:
+      host: "127.0.0.1"
+      port: 9600
+    log:
+      level: info
+    config:
+      reload:
+        automatic: true
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: elk
+  name: logstash-pipeline-config
+data:
+  logstash.conf: |
+    input {
+      tcp {
+        port => 5000
+      }
+      gelf {
+        port => 12201
+      }
+      beats {
+        port => 5044
+      }
+    }
+
+    filter {
+      geoip { source => "clientip" }
+      json { source => "message" }
+    }
+
+    filter {
+      if [@metadata][beat] == "apm" {
+        if [service][name] {
+          mutate {
+            add_field => { "[@metadata][target_index]" => "apm-%{[service][name]}-%{[@metadata][version]}-%{+YYYY.MM.dd}" }
+            add_field => { "type" => "apm-%{[service][name]}"}
+          }
+        } else {
+          mutate {
+            add_field => { "[@metadata][target_index]" => "apm-%{[@metadata][version]}-%{+YYYY.MM.dd}" }
+            add_field => { "type" => "apm"}
+          }
+        }
+      } else if [@metadata][beat] == "filebeat" {
+        mutate {
+          add_field => { "[@metadata][target_index]" => "filebeat-%{[@metadata][version}-%{+YYYY.MM.dd}" }
+          add_field => { "type" => "beat"}
+        }
+      } else if [serviceName] {
+        mutate {
+          add_field => { "[@metadata][target_index]" => "%{[serviceName]}-%{+YYYY.MM.dd}" }
+          add_field => { "type" => "service" }
+        }
+      } else {
+        mutate {
+          add_field => { "[@metadata][target_index]" => "misc-%{+YYYY.MM.dd}" }
+          add_field => { "type" => "misc"}
+          add_field => { "metadata" => "%{[@metadata]}" }
+        }
+      }
+    }
+
+    output {
+      stdout { codec => rubydebug }
+      elasticsearch {
+        hosts => [ "elasticsearch:9200" ]
+        index => "%{[@metadata][target_index]}"
+      }
+    }

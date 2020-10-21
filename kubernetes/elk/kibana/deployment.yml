@@ -1,0 +1,39 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: elk
+  name: kibana
+  labels:
+    app: kibana
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kibana
+  template:
+    metadata:
+      labels:
+        app: kibana
+    spec:
+      containers:
+        - name: kibana
+          image: docker.elastic.co/kibana/kibana:7.9.0
+          imagePullPolicy: IfNotPresent
+          resources:
+            limits:
+              memory: "1000Mi"
+              cpu: "500m"
+            requests:
+              memory: "500Mi"
+              cpu: "500m"
+          ports:
+            - name: default
+              containerPort: 5601
+          volumeMounts:
+            - name: config-volume
+              mountPath: /usr/share/kibana/config
+      volumes:
+        - name: config-volume
+          configMap:
+            name: kibana-config

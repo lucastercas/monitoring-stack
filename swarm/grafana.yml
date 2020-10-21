@@ -1,0 +1,42 @@
+version: "3.7"
+services:
+  grafana:
+    image: grafana/grafana:7.1.1-ubuntu
+    user: root:root
+    ports:
+      - 3000:3000
+    networks:
+      - traefik-public
+    environment:
+      GF_INSTALL_PLUGINS: grafana-clock-panel,briangann-gauge-panel,alexanderzobnin-zabbix-app,grafana-simple-json-datasource,grafana-piechart-panel
+    volumes:
+      - type: volume
+        source: grafana-settings
+        target: /var/lib/grafana
+        volume:
+          nocopy: true
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      labels:
+        - traefik.enable=true
+        - traefik.http.routers.grafana.rule=Host(`${grafana-host}`)
+        - traefik.http.routers.grafana.entrypoints=web
+        - traefik.http.services.grafana.loadbalancer.server.port=3000
+      resources:
+        limits:
+          memory: 2048M
+          cpus: "2"
+
+volumes:
+  grafana-settings:
+    driver: local
+    driver_opts:
+      type: nfs
+      device: :/media/nfs/grafana
+      o: addr=${nfs-ip},nolock,soft,rw
+
+networks:
+  traefik-public:
+    external: true

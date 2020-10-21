@@ -1,0 +1,35 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: monitoring
+  name: zabbix-pgsql
+  labels:
+    app: zabbix-pgsql
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: zabbix-pgsql
+  template:
+    metadata:
+      labels:
+        app: zabbix-pgsql
+    spec:
+      containers:
+        - name: zabbix-pgsql
+          image: postgres:12.4
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: default
+              containerPort: 5432
+          envFrom:
+            - configMapRef:
+                name: zabbix-pgsql-config
+          volumeMounts:
+            - name: zabbix-pgsql-volume
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: zabbix-pgsql-volume
+          persistentVolumeClaim:
+            claimName: zabbix-pgsql-pvc

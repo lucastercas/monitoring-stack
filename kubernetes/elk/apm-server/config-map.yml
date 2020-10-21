@@ -1,0 +1,78 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: elk
+  name: apm-server-config
+data:
+  apm-server.yml: |
+    apm-server:
+      host: "0.0.0.0:8200"
+      concurrent_requests: 5
+      rum:
+        enabled: true
+        allow_origins: ["*"]
+        source_mapping:
+          enabled: true
+          index_pattern: "apm-*-sourcemap"
+      frontend:
+        enabled: true
+      dashboard:
+        enabled: true
+      kibana:
+        enabled: true
+        host: "http://kibana:5601"
+        protocol: http
+
+    queue:
+      mem:
+        events: 4096
+    max_procs: 2
+
+    setup:
+      template:
+        name: "apm-server"
+        pattern: "apm-*"
+        enabled: true
+        overwrite: false
+        settings:
+          index:
+            number_of_shards: 1
+            codec: best_compression
+          protocol: http
+      kibana:
+        enabled: true
+        host: "http://kibana:5601"
+      dashboard:
+        enabled: true
+
+    output:
+      elasticsearch:
+        enabled: true
+        hosts: [ "http://elasticsearch:9200" ]
+        indices:
+          - index: "apm-%{[beat.version]}-sourcemap"
+            when.contains:
+              processor.event: "sourcemap"
+          - index: "apm-%{[beat.version]}-error-%{+yyyy.MM.dd}"
+            when.contains:
+              processor.event: "error"
+          - index: "apm-%{[beat.version]}-transaction-%{+yyyy.MM.dd}"
+            when.contains:
+              processor.event: "transaction"
+          - index: "apm-%{[beat.version]}-span-%{+yyyy.MM.dd}"
+            when.contains:
+              processor.event: "span"
+          - index: "apm-%{[beat.version]}-metric-%{+yyyy.MM.dd}"
+            when.contains:
+              processor.event: "metric"
+          - index: "apm-%{[beat.version]}-onboarding-%{+yyyy.MM.dd}"
+            when.contains:
+              processor.event: "onboarding"
+      logstash:
+        enabled: false
+        hosts: [ "logstash" ]
+        
+    logging:
+      level: info
+      to_files: false

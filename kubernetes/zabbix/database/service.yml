@@ -1,0 +1,12 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: monitoring
+  name: zabbix-pgsql
+spec:
+  selector:
+    app: zabbix-pgsql
+  ports:
+    - port: 5432
+      targetPort: default

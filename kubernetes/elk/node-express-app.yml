@@ -1,0 +1,23 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: node-express-app
+  name: node-express-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: node-express-app
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: node-express-app
+    spec:
+      containers:
+        - image: lucastercas/node-express-app
+          name: node-express-app
+          resources: {}
+status: {}

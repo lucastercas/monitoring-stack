@@ -1,0 +1,13 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: monitoring
+  name: zabbix-server-config
+data:
+  DB_SERVER_HOST: "zabbix-pgsql"
+  DB_SERVER_PORT: "5432"
+  POSTGRES_DB: "zabbix"
+  POSTGRES_PASSWORD: "db_pass"
+  POSTGRES_USER: "postgres"
+  ZBX_CACHESIZE: 1G

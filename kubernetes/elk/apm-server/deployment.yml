@@ -1,0 +1,46 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: elk
+  name: apm-server
+  labels:
+    app: apm-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: apm-server
+  template:
+    metadata:
+      labels:
+        app: apm-server
+    spec:
+      containers:
+        - name: apm-server
+          image: docker.elastic.co/apm/apm-server:7.9.0
+          args: ["-e"]
+          imagePullPolicy: IfNotPresent
+          resources:
+            limits:
+              memory: "1000Mi"
+              cpu: "500m"
+            requests:
+              memory: "500Mi"
+              cpu: "500m"
+          ports:
+            - name: default
+              containerPort: 8200
+          volumeMounts:
+            - name: config-volume
+              mountPath: /usr/share/apm-server/apm-server.yml
+              readOnly: true
+              subPath: apm-server.yml
+            - name: data-volume
+              mountPath: /usr/share/apm-server/data
+      volumes:
+        - name: config-volume
+          configMap:
+            name: apm-server-config
+        - name: data-volume
+          emptyDir: {}

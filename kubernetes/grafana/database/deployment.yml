@@ -1,0 +1,35 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: monitoring
+  name: grafana-pgsql
+  labels:
+    app: grafana-pgsql
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana-pgsql
+  template:
+    metadata:
+      labels:
+        app: grafana-pgsql
+    spec:
+      containers:
+        - name: grafana-pgsql
+          image: postgres:12.4
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: grafana-pgsql-config
+          ports:
+            - name: default
+              containerPort: 5432
+          volumeMounts:
+            - name: grafana-pgsql-volume
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: grafana-pgsql-volume
+          persistentVolumeClaim:
+            claimName: grafana-pgsql-pvc

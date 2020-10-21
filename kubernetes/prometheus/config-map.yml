@@ -1,0 +1,76 @@
+---
+# Config taken from https://github.com/prometheus/prometheus/blob/master/documentation/examples/prometheus-kubernetes.yml
+apiVersion: v1
+kind: ConfiMap
+metadata:
+  namespace: monitoring
+  name: prometheus-config
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 5s
+      evaluation_interval: 5s
+    scrape_config:
+      - job_name: "prometheus"
+        static_configs:
+          - targets: [ "localhost:9090" ]
+
+      # Scrape Config for API Servers
+      - job_name: "k8s-apiservers"
+        scheme: https
+        tls_config:
+          # ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+          insecure_skip_verify: true # Disable certificate verification
+        # bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+        kubernetes_sd_configs:
+          - role: endpoints
+        relabel_configs:
+          - source_labels:
+              - __meta_kubernetes_namespace
+              - __meta_kubernetes_service_name
+              - __meta_kubernetes_endpoint_port_name
+            action: keep
+            regex: default;kubernetes;https
+      
+      # Scrape Config for Nodes
+      - job_name: "k8s-nodes"
+        scheme: https
+        tls_config:
+          # ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+          insecure_skip_verify: true
+        # bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+        kubernetes_sd_configs:
+          - role: node
+        relabel_configs:
+          - action: labelmap
+            regex: __meta_kubernetes_node_label_(.+)
+
+      # Scrape Configs for Kubelet cAdvisor
+      - job_name: "k8s-cadvisor"
+        scheme: https
+        tls_config:
+          # ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+          insecure_skip_verify: true
+        # bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+        kubernetes_sd_configs:
+          - role: node
+        relabel_configs:
+          - action: labelmap
+            regex: __meta_kubernetes_node_label_(.+)
+
+      # Scrape Configs for Service Endpoints
+      - job_name: "k8s-service-endpoints"
+
+      # Scrape Configs for Pods
+      - job_name: "k8s-pods"
+        kubernetes_sd_configs:
+          - role: pod
+        relabel_configs:
+          - action: labelmap
+            regex: __meta_kubernetes_pod_label_(.+)
+          - source_labels: [__meta_kubernetes_namespace]
+            action: replace
+            target_label: kubernetes_namespace
+          - source_labels: [__meta_kubernetes_pod_name]
+            action: replace
+            target_label: kubernetes_pod_name

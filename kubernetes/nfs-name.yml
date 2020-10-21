@@ -1,0 +1,20 @@
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: nfs
+spec:
+  type: ClusterIp
+  ports:
+    - port: 80
+      targetPort: 80
+---
+kind: Endpoints
+apiVersion: v1
+metadata:
+  name: nfs
+subsets:
+  - addresses:
+      - ip: ${nfs-ip}
+    ports:
+      - port: 80

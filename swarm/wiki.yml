@@ -1,0 +1,72 @@
+version: "3.7"
+
+services:
+  wiki-database:
+    image: postgres:11-alpine
+    user: root:root
+    networks:
+      - wiki-private
+    environment:
+      POSTGRES_DB: wiki
+      POSTGRES_PASSWORD: 123123
+      POSTGRES_USER: wikijs
+    volumes:
+      - type: volume
+        source: wiki-pg-data
+        target: /var/lib/postgresql/data
+        volume:
+          nocopy: true
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      resources:
+        limits:
+          memory: 1024M
+          cpus: "1"
+
+  wiki:
+    image: requarks/wiki:2
+    networks:
+      - traefik-public
+      - wiki-private
+    depends_on:
+      - wiki-database
+    ports:
+      - "3001:3000"
+    environment:
+      DB_TYPE: postgres
+      DB_HOST: wiki-database
+      DB_PORT: 5432
+      DB_USER: wikijs
+      DB_PASS: 123123
+      DB_NAME: wiki
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.role==manager]
+      restart_policy:
+        condition: on-failure
+      labels:
+        - traefik.enable=true
+        - traefik.http.routers.wiki.rule=Host(`${wiki-host}`)
+        - traefik.http.routers.wiki.entrypoints=web
+        - traefik.http.services.wiki.loadbalancer.server.port=3000
+      resources:
+        limits:
+          memory: 1024M
+          cpus: "1"
+
+volumes:
+  wiki-pg-data:
+    driver: local
+    driver_opts:
+      type: nfs
+      device: :/media/nfs/wiki
+      o: addr=${nfs-ip},nolock,soft,rw
+
+networks:
+  wiki-private:
+    driver: overlay
+  traefik-public:
+    external: true
