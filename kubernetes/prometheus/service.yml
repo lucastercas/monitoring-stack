@@ -6,3 +6,22 @@ metadata:
   name: prometheus
 spec:
   type: ClusterIP
+  selector:
+    app: prometheus
+  ports:
+    - port: 9090
+      targetPort: default
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: monitoring
+  name: prometheus-np
+spec:
+  type: NodePort
+  selector:
+    app: prometheus
+  ports:
+    - port: 9090
+      targetPort: default
+      nodePort: 32510

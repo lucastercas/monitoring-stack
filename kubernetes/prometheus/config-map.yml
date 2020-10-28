@@ -1,7 +1,7 @@
 ---
 # Config taken from https://github.com/prometheus/prometheus/blob/master/documentation/examples/prometheus-kubernetes.yml
 apiVersion: v1
-kind: ConfiMap
+kind: ConfigMap
 metadata:
   namespace: monitoring
   name: prometheus-config
@@ -10,7 +10,17 @@ data:
     global:
       scrape_interval: 5s
       evaluation_interval: 5s
-    scrape_config:
+    scrape_configs:
+      - job_name: "kafka"
+        static_configs:
+          - targets:
+            - 10.0.1.50:7070
+            - 10.0.1.51:7070
+            - 10.0.1.52:7070
+            - 10.0.1.53:7071
+            - 10.0.1.54:7071
+            - 10.0.1.55:7071
+            
       - job_name: "prometheus"
         static_configs:
           - targets: [ "localhost:9090" ]
